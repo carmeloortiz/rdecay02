@@ -1,0 +1,145 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <map>
+#include <random>
+#include <math.h>
+#include "CEvNSGlow.hh"
+
+using namespace std;
+
+std::vector<double> sample_time_points()
+{
+	
+	string line;
+	ifstream afile;
+	int index, i, j, arr_length;
+	double time, lum;
+	double t_array[256], lum_array[256];
+	arr_length = 256;
+	i = 0;
+	
+	//OPEN FILE, SET VALUES OVER THE ARRAY SIZE TO NAN
+	afile.open("luminosity_nue_garching.txt", ios::out | ios::in);
+	while (i<arr_length) {
+		if (getline(afile, line)) {
+			index = line.find(' ');
+			time = stod(line.substr(0, index));
+			lum = stod(line.substr(index, sizeof(line)));
+			t_array[i] = time;
+			lum_array[i] = lum;
+		}
+		else {
+			t_array[i] = NAN;
+			lum_array[i] = NAN;
+		}
+		i++;
+	}
+
+	//DETERMINE THE MAXIMUM AND MINIMUM TIME RANGE
+	j = 0;
+	int arr_length_final = 256;
+	double t_min, t_max, t_interval, delta_t;
+	double t_final[256],y_final[256];
+	t_min = 0;
+	t_max = 0;
+	while (!isnan(t_array[j])) {
+		if (t_array[j] > t_max) {
+			t_max = t_array[j]; 
+		}
+		if (t_array[j] < t_min) {
+			t_min = t_array[j];
+		}
+		j++;
+	}
+	
+	//SET START TIME TO 0
+	j = 0;
+	delta_t = 0;
+	t_interval = (t_max - t_min) / arr_length_final;
+	while (j<arr_length_final) {
+		t_final[j] = t_min + delta_t;
+		y_final[j] = return_interpolated_y(t_array, lum_array, arr_length, t_final[j]);
+		t_final[j] = t_final[j] - t_array[0];
+		delta_t += t_interval;
+		j++;
+	}
+
+	//SAMPLING FROM PROBABILITY DISTRIBUTION
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::vector<double> a(std::begin(t_final), std::end(t_final));
+	std::vector<double> w(std::begin(y_final), std::end(y_final));
+
+	std::piecewise_constant_distribution<> d(a.begin(), a.end(), w.begin());
+	std::vector<double> time_points;
+
+	for (int n = 0; n < 100; ++n) {
+		time_points.push_back(d(gen));
+		//cout << time_points.at(n) << endl;
+	}
+	return time_points;
+	
+
+    
+
+
+    
+}
+ 
+double return_interpolated_y(double t_values[], double y_values[], int arr_size, double t)
+{
+	//A SIMPLE PIECEWISE LINEAR INTERPOLATION
+	double slope;
+	slope = 0;
+	for (int i = 1; i < arr_size; i++) {
+		if (t_values[i] > t) {
+			slope = (y_values[i] - y_values[i-1]) / (t_values[i] - t_values[i-1]);
+			return slope * (t - t_values[i-1]) + y_values[i-1];
+		}
+	}
+}
+
+
+double cevns_xsec(){
+    double T[100];
+    double y[100];
+    double M = 37224.7225; //MeV 
+    std::fstream afile("neutrino_energies.txt");
+    std::string line;
+    double nu_E; 
+    double T_max;
+    std::vector<double> recoil_energy;
+    while(std::getline(afile,line)){
+        nu_E = std::stod(line);
+        T_max = (2*std::pow(nu_E,2))/(2*nu_E+M);
+        for (int i=0;i<100;i++){
+            T[i] = ((double)i/100)*T_max;
+            y[i] = 1.0-(T[i]/T_max);
+        }
+    
+        //SAMPLING FROM PROBABILITY DISTRIBUTION
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::vector<double> a(std::begin(T), std::end(T));
+        std::vector<double> w(std::begin(y), std::end(y));
+
+	
+
+        std::piecewise_constant_distribution<> d(a.begin(),a.end(),w.begin());
+
+        recoil_energy.push_back(d(gen));
+        
+    }
+    std::fstream dfile;
+    for(int n=0;n<recoil_energy.size();n++){
+        std::cout << "RECOIL ENERGY: "<< recoil_energy.at(n) << std::endl;
+	dfile.open("supernova/recoil_energies_xsec.txt", std::fstream::app);
+	dfile << recoil_energy.at(n) << std::endl;
+	dfile.close();
+    }
+
+}
+
+
+

@@ -1,0 +1,102 @@
+# 									
+# Demonstrate that isotopes produced in hadronic processes
+# can be treated by RadioactiveDecay.  
+#
+# To register hadronic processes, uncomment corresponding lines
+# in PhysicsList.cc
+#                                                                         
+/control/verbose 2
+/run/verbose 1
+/event/verbose 0
+/tracking/verbose 0
+
+#
+# set the target/detector geometry
+#/rdecay02/det/setTargetMate G4_SODIUM_IODIDE
+# set the target/detector geometry
+/rdecay02/det/setTargetLength 58 m
+# "Radius" means halfXBox, halfYBox
+/rdecay02/det/setTargetRadius 6 m
+#/rdecay02/det/setDetectorLength 40. m
+# Detector"Radius" is set to TargetRadius-InsetRadius
+#/rdecay02/det/setInsetRadius 3.9 m
+# postive puts outside of foam this much outside cryostat, and inside boundary right at TargetRadius.
+# So it goes from outside in: G10,Wood,Foam,ColdSkin,Target
+#/rdecay02/det/setShieldThickness 40 cm
+
+/rdecay02/det/setShieldThickness +77.6 cm
+
+
+/rdecay02/det/setDetectorSiPMsOnAcrylic true
+/rdecay02/det/setDetectorSiPMsOnCathode true
+/rdecay02/det/setDetectorSiPMSize 24.0 cm
+/rdecay02/det/setDetectorSiPMThickness 0.1 cm
+/rdecay02/det/setDetectorSiPMPhotoCathodeCoverage 0.80
+
+/rdecay02/det/setAcrylicRadius 3. m
+/rdecay02/det/setAcrylicLength 40. m
+
+/rdecay02/material/setG10SpecRef 0.44
+/rdecay02/material/setAcrylicSpecRef 0.96
+/rdecay02/material/setLArAbsLength 50  m
+
+#
+/run/initialize
+#
+/process/list
+#
+# rdm is applied only to the target volume
+/grdm/noVolumes
+/grdm/selectVolume Target
+
+/gps/pos/type Volume
+/gps/pos/shape Para
+/gps/pos/halfx 3 m
+#/gps/pos/halfy 6. m
+/gps/pos/halfy 4.5 m
+/gps/pos/halfz 20 m
+
+/gps/energy 0 MeV
+/gps/ang/type iso
+/gps/particle ion
+/gps/ion 18 39 0 0 # 39Ar
+#/gps/ion 18 42 0 0 # 42Ar
+
+
+#/analysis/setFileName neutron_shield
+#/analysis/setFileName neutron_plastic20cm
+#/analysis/setFileName /Volumes/EC2TB/G4/mod4/Ar42_fidv_shinyg10_0
+/analysis/h1/set 1 100 0. 320000.
+/analysis/h1/set 2 100 0. 320000.
+/analysis/h1/set 3 100 0. 320000.
+/analysis/h1/set 4 120 0. 24. MeV
+/analysis/h1/set 5 120 0. 24. MeV
+/analysis/h1/set 6 120 0. 24. MeV
+/analysis/ntuple/setActivation 0 true
+/analysis/ntuple/setActivation 1 true
+/analysis/ntuple/setActivation 2 true
+##/analysis/ntuple/setActivation 3 true  # Tracks
+/analysis/ntuple/setActivation 4 true # Steps
+/run/printProgress 1000
+
+
+/control/execute vis.mac
+
+# 0.8 Bq/kg leads to 10 Hz. 10 * piE7 sec is ~31 E7. Let's run 1/10th of one year.
+# Note above 10 Hz is n capture rate. 
+# Note, further, that my full DUNE geometry calculation shows for neutron emanation rate of 18,879 n's from rock, or 1E-5/cm2/sec, I get ~30 Hz capture rate.
+# Also note Beacom shows more than 20E3  reduction w 40cm water.
+
+# 1E-5*1E4*12*60*(4+12*12/(12*60))*3.14159E7 = 95.0E6
+
+# 95.0E6/31E6 = 3.064
+/run/beamOn 1
+
+#/run/beamOn 20000
+#/analysis/setFileName /Volumes/EC2TB/G4/mod4/Ar42_fidv_shinyg10_1
+#/run/beamOn 20000
+#/analysis/setFileName /Volumes/EC2TB/G4/mod4/Ar42_fidv_shinyg10_2
+#/run/beamOn 20000
+#/analysis/setFileName /Volumes/EC2TB/G4/mod4/Ar42_fidv_shinyg10_3
+#/run/beamOn 20000
+

@@ -1,0 +1,5 @@
+HOWTO
+
+.Change macro file settings depnding on Ar39 or CEvNS/CC
+-refresh events.dat, hits.dat, index.dat
+-check rdecay02.cc for which events you want to simulate

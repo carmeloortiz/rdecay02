@@ -1,0 +1,73 @@
+/control/verbose 2
+/run/verbose 0
+/tracking/verbose 0
+
+#PARAMETERS
+/rdecay02/det/setTargetLength 58 m
+/rdecay02/det/setTargetRadius 6 m
+/rdecay02/det/setDetectorLength 40. m
+/rdecay02/det/setInsetRadius 3.9 m
+/rdecay02/det/setShieldThickness +77.6 cm
+
+/rdecay02/det/setAcrylicRadius 3. m
+/rdecay02/det/setAcrylicLength 40. m
+/rdecay02/material/setG10SpecRef 0.40
+/rdecay02/material/setAcrylicSpecRef 0.96
+/rdecay02/material/setLArAbsLength 50  m
+
+/rdecay02/det/setDetectorSiPMsOnAcrylic true
+/rdecay02/det/setDetectorSiPMsOnCathode true
+/rdecay02/det/setDetectorSiPMSize 24.0 cm
+/rdecay02/det/setDetectorSiPMThickness 0.1 cm
+/rdecay02/det/setDetectorSiPMPhotoCathodeCoverage 0.80
+
+
+/run/initialize
+/process/list
+
+/grdm/noVolumes
+/grdm/selectVolume Detector
+
+#/rdecay02/marley/setConfigFile "./supernova/CEvNS.js"
+
+
+# When 'nu_e' is seen in PrimaryGenerator.cc it launches 1 Marley event
+/gps/particle geantino
+/gps/position 0 0 0 m
+/gps/pos/type Volume
+/gps/pos/shape Para
+/gps/pos/halfx 3 m
+/gps/pos/halfy 4.5 m
+/gps/pos/halfz 20. m
+/gps/pos/centre 0. 0. 0. m
+
+#/gps/pos/confine Detector
+# This is for emitting e's from the 1.2cm thick coldskin OR the bulk Ar in detector
+
+#/analysis/setFileName  marley_optphys_SN-liv-CEvNS
+/analysis/h1/set 1 100 0. 320000.
+/analysis/h1/set 2 100 0. 320000.
+/analysis/h1/set 3 100 0. 320000.
+/analysis/h1/set 4 120 0. 24. MeV
+/analysis/h1/set 5 120 0. 24. MeV
+/analysis/h1/set 6 120 0. 24. MeV
+/analysis/ntuple/setActivation 0 true
+/analysis/ntuple/setActivation 1 true
+/analysis/ntuple/setActivation 2 true
+/run/printProgress 1000
+
+#/control/execute vis.mac
+#/vis/ogl/set/displayListLimit 50000000
+
+
+#/vis/geometry/set/visibility SiPM 0 0
+#/vis/modeling/trajectories/list
+#/vis/modeling/trajectories/drawByParticleID-0/default/setTimeSliceInterval 0.1 ns
+#/vis/scene/add/trajectories rich
+
+/run/beamOn 1
+
+
+
+#/run/beamOn 1
+#/vis/viewer/clear

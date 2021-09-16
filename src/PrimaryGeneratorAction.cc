@@ -40,17 +40,18 @@
 #include "G4IonTable.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4Geantino.hh"
-#include "G4ChargedGeantino.hh"
 #include "G4NeutrinoE.hh"
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
+
+
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 PrimaryGeneratorAction::PrimaryGeneratorAction()
   : G4VUserPrimaryGeneratorAction(),fParticleGun(0),
-    fPrimaryGenerator(0), config_file_name(std::string(std::getenv("MARLEY"))+"/examples/config/annotated.js")
+    fPrimaryGenerator(0), config_file_name(std::string("/home/local1/Downloads/rdecay02-liquid_deception/build/CEvNSGlow/CEvNS.js"))
 {
   //  G4int n_particle = 1;
   //  fParticleGun  = new G4ParticleGun(n_particle);
@@ -68,7 +69,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction()
   marley::JSONConfig config(config_file_name);
   std::cout << "PrimaryGenAction: Marley config file is " << config_file_name << std::endl;
   std::cout << "PrimaryGenAction: Unused if nu_e is not specified "  << std::endl;
-  marley_generator_= config.create_generator();
+  marley_generator_= config.create_generator(15,4.5);
 
 }
 
@@ -80,7 +81,7 @@ void PrimaryGeneratorAction::ReloadMarleyConfig()
   marley::JSONConfig config(config_file_name);
   std::cout << "PrimaryGenAction: Marley config file is " << config_file_name << std::endl;
   std::cout << "PrimaryGenAction: Unused if nu_e is not specified "  << std::endl;
-  marley_generator_= config.create_generator();
+  marley_generator_= config.create_generator(15,4.5);
 
 }
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -97,14 +98,15 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction()
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
-  // if there's a geantino in .mac file create a "photon bomb"
+  
   std::vector<double> xyzbounds { 
       fParticleGun->GetCurrentSource()->GetPosDist()->GetHalfX(),
       fParticleGun->GetCurrentSource()->GetPosDist()->GetHalfY(),
       fParticleGun->GetCurrentSource()->GetPosDist()->GetHalfZ()};
 
   std::cout << "GeneratePrimaries() particle requested is " << fParticleGun->GetParticleDefinition() << std::endl;
-
+  
+  /*
   if (fParticleGun->GetParticleDefinition() == G4Geantino::Geantino()) {  
     std::cout << "GeneratePrimaries: detect that a 'photon bomb' is to be created." << std::endl;
 
@@ -113,21 +115,24 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   }    
   //create vertex
   //   
+  */
 
-  else if (fParticleGun->GetParticleDefinition() == G4NeutrinoE::NeutrinoE()) {
-    std::cout << "GeneratePrimaries: detect that a Marley event is to be created." << std::endl;
-
+  // if there's a geantino in .mac file, run the CEvNS Glow simulation
+  if (fParticleGun->GetParticleDefinition() == G4Geantino::Geantino()) {  
     // Generate a new MARLEY event using the owned marley::Generator object  
-    marley::Event ev = marley_generator_.create_event();
-    fPrimaryGenerator->GeneratePrimaryVertexMarley(anEvent,xyzbounds,ev);
-
+    
+    //beta particle
+    fPrimaryGenerator->GeneratePrimaryVertexCEvNSGlow(anEvent,xyzbounds);
     return;
   }
 
-  else if (fParticleGun->GetParticleDefinition() == G4ChargedGeantino::ChargedGeantino()) {
-    std::cout << "GeneratePrimaries: detect that a 0nubb event is to be created." << std::endl;
 
-    fPrimaryGenerator->GeneratePrimaryVertex0Nu2Beta(anEvent,xyzbounds);
+  else if (fParticleGun->GetParticleDefinition() == G4NeutrinoE::NeutrinoE()) {
+    std::cout << "GeneratePrimaries: detect that a Marley event is to be created." << std::endl;
+    
+    // Generate a new MARLEY event using the owned marley::Generator object  
+    marley::Event ev = marley_generator_.create_event();
+    fPrimaryGenerator->GeneratePrimaryVertexMarley(anEvent,xyzbounds,ev);
 
     return;
   }

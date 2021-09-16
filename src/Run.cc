@@ -389,7 +389,7 @@ void Run::EndOfRun()
   fParticleDataMap2.clear();
                           
   //restore default format         
-  G4cout.precision(dfprec);   
+  G4cout.precision(dfprec); 
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

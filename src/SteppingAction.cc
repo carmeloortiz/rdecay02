@@ -42,6 +42,9 @@
 #include "G4UnitsTable.hh"
 
 #include "G4OpticalPhoton.hh" 
+#include <iostream>
+#include <fstream>
+#include <cmath>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -58,10 +61,11 @@ SteppingAction::~SteppingAction()
 
 void SteppingAction::UserSteppingAction(const G4Step* aStep)
 {
+  
   Run* run = static_cast<Run*>(
         G4RunManager::GetRunManager()->GetNonConstCurrentRun());    
   G4int  event = G4EventManager::GetEventManager()->GetConstCurrentEvent()->GetEventID();
-
+  
   G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
 
   //which volume ?
@@ -107,9 +111,13 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep)
   G4int pID       = particle->GetPDGEncoding();
 
   if (edepStep <= 0. && (pID!=0 && pID!=-22) ) return; // the deception version of G4 uses -22 for optical photons; my Mac's uses 0.
-
   G4double time   = aStep->GetPreStepPoint()->GetGlobalTime();
-  G4double weight = aStep->GetPreStepPoint()->GetWeight();   
+  G4double weight = aStep->GetPreStepPoint()->GetWeight(); 
+
+  //std::cout<<"TIME "<< time/s << std::endl;  
+
+  if (iVol!=3)
+    fEventAction->AddEdep(iVol, edepStep, time, weight);
 
   //fill ntuple id = 2
   G4int id = 4;   
@@ -117,43 +125,10 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep)
   const G4ThreeVector pos(aStep->GetPreStepPoint()->GetPosition());
   const G4ThreeVector tpos(aStep->GetPostStepPoint()->GetPosition());
 
+
+
   std::string startp("null");
   std::string endp("null");
-
-
-  /*
-  const std::vector<double> fidv {
-      GetEvtAct()->GetPrimGenAct()->GetParticleGun()->GetCurrentSource()->GetPosDist()->GetHalfX(),
-      GetEvtAct()->GetPrimGenAct()->GetParticleGun()->GetCurrentSource()->GetPosDist()->GetHalfY(),
-      GetEvtAct()->GetPrimGenAct()->GetParticleGun()->GetCurrentSource()->GetPosDist()->GetHalfZ()
-      } ;
-  */
-
-  // Above does not work when launching n's, gammas from outside the fidV. G'arr! Hard code it for now. EC, 4-Aug-2021.
-
-  const std::vector<double> fidv {3000,3000,20000};
-  if (sprocess)
-      startp = sprocess->GetProcessName();
-
-  // If an optical photon is born outside fiducialvolume let's kill it. EC, 4-Aug-2021.
-  // Idea being that we'd reco this vtx outside our fidv and cut the event.
-  if ((pID == 0 or pID == -22 ) and
-      ( ( abs(pos[0]) > fidv.at(0) ) or ( abs(pos[1]) > fidv.at(1) ) or ( abs(pos[2]) > fidv.at(2) ) ) 
-      //      and track->GetCurrentStepNumber() <= 1  // seems ok looking at steps, but concerned it's biasing. EC, 5-Aug-2021.
-      and track->GetCurrentStepNumber() == 0
-      )
-    {
-      //      std::cout << "SteppingAction(): Killing optical photon Track at pos " << pos[0] << ", " << pos[1]  << ", " << pos[2] << std::endl;
-      track->SetTrackStatus(fStopAndKill);
-      return;
-    }
-
-
-  if (iVol!=3)
-    fEventAction->AddEdep(iVol, edepStep, time, weight);
-
-
-
 
 
   analysisManager->FillNtupleDColumn(id,0, edepStep);
@@ -172,7 +147,7 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep)
     analysisManager->FillNtupleDColumn(id,11, eVolume->GetCopyNo());
   else
     analysisManager->FillNtupleDColumn(id,11, 0);
-  analysisManager->FillNtupleSColumn(id,12, track->GetVolume()->GetLogicalVolume()->GetMaterial()->GetName());
+  //analysisManager->FillNtupleSColumn(id,12, track->GetVolume()->GetLogicalVolume()->GetMaterial()->GetName());
   analysisManager->FillNtupleDColumn(id,13, track->GetCurrentStepNumber());
   if (sprocess)
       startp = sprocess->GetProcessName();
@@ -184,13 +159,21 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep)
   analysisManager->FillNtupleDColumn(id,17, tpos[1]/mm);
   analysisManager->FillNtupleDColumn(id,18, tpos[2]/mm);
   analysisManager->FillNtupleSColumn(id,19,eVname);
+  
 
+  //EDIT: 
+  //std::fstream file;
   if (eVname=="SiPM") {
 	  fEventAction->AddEdep(3, 1.0, time, weight);	  
+	  //file.open("CEvNSGlow/events.dat", std::fstream::app);
+	  //std::cout << std::setprecision(10) << (aStep->GetPostStepPoint()->GetGlobalTime())/pow(10,9) << std::endl;
+	  //file.close();
   }
+
+
   analysisManager->AddNtupleRow(id);      
-
-
+  
+  
 
 }
 

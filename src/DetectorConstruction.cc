@@ -63,16 +63,17 @@ DetectorConstruction::DetectorConstruction()
  fWorldMater(0), fPhysiWorld(0),
  fDetectorMessenger(0)
 {
-  fTargetLength      = 1*cm; 
-  fTargetRadius      = 0.5*cm;
-  fDetectorLength    = 5*cm; 
+  fTargetLength      = 58*m; 
+  fTargetRadius      = 6*m;
+  fDetectorLength    = 40*m; 
   fDetectorThickness = 2*cm;
-  fInsetRadius = 0.0*cm;
+  fInsetRadius = 3.9*m;
   fDetectorRadius = 0.0*cm;
+  fShieldThickness = 77.6*cm;
 
   // 13-Feb-2020 Make the acrylic walls go out 1m beyond fiducial.
-  fAcrylicRadius    = 3.0*m; fAcrylicRadius += 0.1*m;
-  fAcrylicLength    = 40.0*m;  fAcrylicLength += 2.0*m;
+  fAcrylicRadius    = 3.0*m; fAcrylicRadius += 0.0*m;
+  fAcrylicLength    = 40.0*m;  fAcrylicLength += 0.0*m;
   fAcrylicThickness = 5.0 *cm;
   /*
   fAcrylicThickness = 15.0 *cm;
@@ -87,9 +88,9 @@ DetectorConstruction::DetectorConstruction()
       
   // These 5 read in from g4mac file.
   fSiPMsOnAcrylic = true;
-  fSiPMsOnCathode = false;
+  fSiPMsOnCathode = true;
   fSiPMSize = 24.* cm;
-  fSiPMThickness = 1. * cm;
+  fSiPMThickness = 0.1 * cm;
   fSiPMPhotoCathodeCoverage = 0.8;
 
   DefineMaterials();

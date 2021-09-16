@@ -52,6 +52,7 @@ TrackingAction::TrackingAction(DetectorConstruction* det, EventAction* evt)
 
 void TrackingAction::PreUserTrackingAction(const G4Track* track)
 {
+
   
   Run* run = static_cast<Run*>(
         G4RunManager::GetRunManager()->GetNonConstCurrentRun());    
@@ -91,25 +92,11 @@ void TrackingAction::PreUserTrackingAction(const G4Track* track)
   run->ParticleCount(name,energy,iVol);
   
   std::vector<std::string> procOfInterest({"capt","beta","radioactive"}); // to catch ncapt, Rn222 chain, Ar39, Ar42 chain betas. And primaries with "null".
-  // Add PairProduction and ComptonScattering to get the gammas I launch from Bi214,Tl208 from outside. EC, 5-Aug-2021.
-  procOfInterest.push_back("pair");
-  procOfInterest.push_back("comp");
   std::for_each(processName.begin(), processName.end(), [](char & c) {
       c = ::tolower(c);
     });
 
-  /*
-  const std::vector<double> fidv {
-      GetEvtAct()->GetPrimGenAct()->GetParticleGun()->GetCurrentSource()->GetPosDist()->GetHalfX(),
-      GetEvtAct()->GetPrimGenAct()->GetParticleGun()->GetCurrentSource()->GetPosDist()->GetHalfY(),
-      GetEvtAct()->GetPrimGenAct()->GetParticleGun()->GetCurrentSource()->GetPosDist()->GetHalfZ()
-      } ;
-  */
-
-  // no worky when launching n's, gammas from outside the fidv. Hard code it. EC, 4-Aug-2021.
-  const std::vector<double> fidv {3000,3000,20000};
-
-  if (abs(vtx[0])<fidv.at(0) && abs(vtx[1])<fidv.at(1) && abs(vtx[2])<fidv.at(2) && !fEventAction->GetFiducial())
+  if (abs(vtx[0])<3000 && abs(vtx[1])<4500 && abs(vtx[2])<20000)
     {
       for (const auto& proc : procOfInterest) {
 	if (processName.find(proc) != std::string::npos) {
@@ -121,7 +108,6 @@ void TrackingAction::PreUserTrackingAction(const G4Track* track)
       }
     }
 
-  //  std::cout << "TrackingAction():  Track at pos " << vtx[0] << ", " << vtx[1]  << ", " << vtx[2] << std::endl;
   //Radioactive decay products
   //G4int procaessType = track->GetCreatorProcess()->GetProcessSubType();
   //  if (processType == fRadioactiveDecay) {
@@ -172,6 +158,7 @@ void TrackingAction::PreUserTrackingAction(const G4Track* track)
     analysisManager->FillNtupleDColumn(id,2, weight);
     analysisManager->AddNtupleRow(id);  
   }
+  
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
